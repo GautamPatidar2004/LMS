@@ -1,8 +1,12 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import StudentLayout from '../../components/layout/StudentLayout';
 import { useTheme } from '../../contexts/ThemeContext';
 import { useCourseDetail } from '../../hooks/useCourseDetail';
+import { useAuth } from '../../hooks/useAuth';
+import { supabase } from '../../lib/supabase';
+import { verifyPaymentSignature } from '../../services/payment';
+import BuyCourseButton from '../../components/payment/BuyCourseButton';
 import { Course, CourseSection } from '../../types/course';
 import {
   BookOpen as BookIcon,
@@ -31,12 +35,49 @@ export default function CourseDetail() {
 
   // Fetch single course details and nested curriculum
   const { course, curriculum, loading, error, refetch } = useCourseDetail(slug);
+  const { user } = useAuth();
 
   // Accordion state: keeps track of which section IDs are expanded
   const [expandedSections, setExpandedSections] = useState<Record<string, boolean>>({});
-  // Enrollment state: mock state for enrollment action feedback
+  
+  // Real enrollment and payment verification state variables
   const [isEnrolled, setIsEnrolled] = useState(false);
-  const [enrolling, setEnrolling] = useState(false);
+  const [checkingEnrollment, setCheckingEnrollment] = useState(true);
+  const [isVerifying, setIsVerifying] = useState(false);
+  const [verificationError, setVerificationError] = useState<string | null>(null);
+  const [lastPaymentResponse, setLastPaymentResponse] = useState<{
+    razorpay_payment_id: string;
+    razorpay_order_id: string;
+    razorpay_signature: string;
+  } | null>(null);
+
+  // Check database for active enrollment of the student in this course
+  useEffect(() => {
+    async function checkEnrollment() {
+      if (!course?.id || !user?.id) {
+        setCheckingEnrollment(false);
+        return;
+      }
+      try {
+        setCheckingEnrollment(true);
+        const { data, error: dbError } = await supabase
+          .from('course_enrollments')
+          .select('id')
+          .eq('student_id', user.id)
+          .eq('course_id', course.id)
+          .maybeSingle();
+
+        if (dbError) throw dbError;
+        setIsEnrolled(!!data);
+      } catch (err) {
+        console.error('Error fetching enrollment status:', err);
+      } finally {
+        setCheckingEnrollment(false);
+      }
+    }
+
+    checkEnrollment();
+  }, [course, user]);
 
   const toggleSection = (sectionId: string) => {
     setExpandedSections((prev) => ({
@@ -45,12 +86,55 @@ export default function CourseDetail() {
     }));
   };
 
-  const handleEnroll = () => {
-    setEnrolling(true);
-    setTimeout(() => {
-      setEnrolling(false);
+  // Triggers the verify-payment Edge Function
+  const handlePaymentSuccess = async (paymentDetails: {
+    razorpay_payment_id: string;
+    razorpay_order_id: string;
+    razorpay_signature: string;
+  }) => {
+    if (!course?.id) return;
+    setIsVerifying(true);
+    setVerificationError(null);
+    setLastPaymentResponse(paymentDetails);
+
+    try {
+      const response = await verifyPaymentSignature({
+        courseId: course.id,
+        razorpayOrderId: paymentDetails.razorpay_order_id,
+        razorpayPaymentId: paymentDetails.razorpay_payment_id,
+        razorpaySignature: paymentDetails.razorpay_signature,
+      });
+
+      if (!response.success) {
+        throw new Error(response.error?.message || 'Payment signature verification failed.');
+      }
+
       setIsEnrolled(true);
-    }, 1500);
+    } catch (err: any) {
+      console.error('Verification error:', err);
+      setVerificationError(err.message || 'Payment verified, but enrollment failed to log. Please click Retry.');
+    } finally {
+      setIsVerifying(false);
+    }
+  };
+
+  const handleRetryVerification = () => {
+    if (lastPaymentResponse) {
+      handlePaymentSuccess(lastPaymentResponse);
+    }
+  };
+
+  // Helper to format course pricing dynamically based on currency code
+  const formatPrice = (amount: number, currencyCode?: string | null) => {
+    const code = currencyCode || 'USD';
+    try {
+      return new Intl.NumberFormat('en-US', {
+        style: 'currency',
+        currency: code.toUpperCase(),
+      }).format(amount);
+    } catch {
+      return `${code.toUpperCase()} ${amount}`;
+    }
   };
 
   // Helper to determine gradient theme when thumbnail_url is missing
@@ -378,49 +462,85 @@ export default function CourseDetail() {
                 <div className="space-y-1">
                   <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">Course Price</span>
                   <div className="flex items-baseline gap-2">
-                    {hasDiscount ? (
-                      <>
-                        <span className={`text-3xl font-black ${isLight ? 'text-slate-850' : 'text-white'}`}>
-                          ${course.discount_price}
-                        </span>
-                        <span className="text-sm font-bold text-slate-450 line-through">
-                          ${course.price}
-                        </span>
-                      </>
-                    ) : (
-                      <span className={`text-3xl font-black ${isLight ? 'text-slate-850' : 'text-white'}`}>
-                        ${course.price}
-                      </span>
-                    )}
+                     {hasDiscount ? (
+                       <>
+                         <span className={`text-3xl font-black ${isLight ? 'text-slate-850' : 'text-white'}`}>
+                           {formatPrice(course.discount_price!, course.currency)}
+                         </span>
+                         <span className="text-sm font-bold text-slate-450 line-through">
+                           {formatPrice(course.price, course.currency)}
+                         </span>
+                       </>
+                     ) : (
+                       <span className={`text-3xl font-black ${isLight ? 'text-slate-850' : 'text-white'}`}>
+                         {formatPrice(course.price, course.currency)}
+                       </span>
+                     )}
                   </div>
                 </div>
 
-                <div className="space-y-3 pt-2">
-                  <button
-                    onClick={handleEnroll}
-                    disabled={enrolling || isEnrolled}
-                    className={`w-full py-3 rounded-xl font-bold text-sm flex items-center justify-center gap-2 transition-all ${
-                      isEnrolled
-                        ? 'bg-emerald-500/10 text-emerald-500 border border-emerald-500/20 cursor-default'
-                        : enrolling
-                          ? 'bg-blue-600/80 text-white cursor-wait'
-                          : 'bg-blue-600 hover:bg-blue-700 text-white shadow-sm shadow-blue-600/15 hover:scale-[1.01]'
-                    }`}
-                  >
-                    {enrolling ? (
-                      <>
-                        <Loader2 className="h-4 w-4 animate-spin" />
-                        Enrolling...
-                      </>
-                    ) : isEnrolled ? (
-                      <>
+                 <div className="space-y-3 pt-2">
+                  {checkingEnrollment ? (
+                    <button
+                      disabled
+                      className="w-full py-3 rounded-xl font-bold text-sm bg-slate-100 dark:bg-slate-800 text-slate-450 cursor-wait flex items-center justify-center gap-2 border border-slate-200 dark:border-slate-700/50"
+                    >
+                      <Loader2 className="h-4 w-4 animate-spin text-blue-600" />
+                      Checking Enrollment...
+                    </button>
+                  ) : isEnrolled ? (
+                    <div className="space-y-2">
+                      <div className="w-full py-3 rounded-xl font-bold text-sm bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 flex items-center justify-center gap-2">
                         <Check className="h-4.5 w-4.5 stroke-[3]" />
                         Enrolled successfully
-                      </>
-                    ) : (
-                      'Enroll Now'
-                    )}
-                  </button>
+                      </div>
+                      <button
+                        onClick={() => navigate(`/student/dashboard`)}
+                        className="w-full py-2.5 rounded-xl font-bold text-xs bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-750 text-slate-700 dark:text-slate-200 transition-all flex items-center justify-center gap-1.5"
+                      >
+                        Go to Student Dashboard
+                      </button>
+                    </div>
+                  ) : (
+                    <div className="space-y-3">
+                      {isVerifying && (
+                        <div className="p-4 bg-blue-500/10 border border-blue-500/20 rounded-xl flex items-center gap-3">
+                          <Loader2 className="h-5 w-5 text-blue-500 animate-spin flex-shrink-0" />
+                          <div className="text-xs font-semibold text-blue-600 dark:text-blue-400 leading-tight">
+                            <p className="font-bold">Verifying Payment...</p>
+                            <p className="text-[10px] opacity-80 mt-0.5">Please wait, registering your course enrollment.</p>
+                          </div>
+                        </div>
+                      )}
+
+                      {verificationError && (
+                        <div className="p-4 bg-red-500/10 border border-red-500/20 rounded-xl space-y-2">
+                          <div className="flex items-start gap-2">
+                            <AlertCircle className="h-4 w-4 text-red-500 flex-shrink-0 mt-0.5" />
+                            <div className="text-xs font-semibold text-red-500 leading-tight">
+                              <p className="font-bold">Verification Error</p>
+                              <p className="text-[10px] opacity-90 mt-0.5">{verificationError}</p>
+                            </div>
+                          </div>
+                          <button
+                            onClick={handleRetryVerification}
+                            className="w-full py-1.5 bg-red-650 hover:bg-red-700 text-white rounded-lg text-xs font-bold transition-all shadow-sm flex items-center justify-center gap-1"
+                          >
+                            Retry Verification
+                          </button>
+                        </div>
+                      )}
+
+                      {!isVerifying && (
+                        <BuyCourseButton
+                          courseId={course.id}
+                          courseTitle={course.title}
+                          onPaymentSuccess={handlePaymentSuccess}
+                          onPaymentError={(msg) => setVerificationError(msg)}
+                        />
+                      )}
+                    </div>
+                  )}
                   
                   <p className="text-[10px] text-center font-bold text-slate-400">
                     30-Day Money-Back Guarantee
