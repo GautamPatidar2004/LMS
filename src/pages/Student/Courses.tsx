@@ -234,13 +234,13 @@ export default function StudentCourses() {
                       </div>
                     </div>
 
-                    {/* See More Button */}
+                    {/* Get Started Button */}
                     <div className="mt-3">
                       <button
-                        onClick={() => navigate(`/courses/${course.slug}`)}
+                        onClick={() => navigate(`/student/courses/${course.slug}/learn`)}
                         className="w-full py-2 rounded-lg font-bold text-[11px] flex items-center justify-center gap-1.5 transition-all bg-blue-600 hover:bg-blue-700 text-white shadow-sm shadow-blue-600/10 hover:shadow-blue-600/20 hover:scale-[1.01]"
                       >
-                        See More
+                        Get Started
                       </button>
                     </div>
                   </div>

@@ -93,6 +93,7 @@ export const courseService = {
    */
   async fetchCourseCurriculum(courseId: string): Promise<CourseSection[]> {
     try {
+      // First try to fetch curriculum WITH materials column
       const { data, error } = await supabase
         .from('course_sections')
         .select(`
@@ -117,6 +118,7 @@ export const courseService = {
             position,
             is_preview,
             is_downloadable,
+            materials,
             status,
             published_at,
             created_at,
@@ -127,38 +129,90 @@ export const courseService = {
         .order('position', { ascending: true });
 
       if (error) {
+        // If error suggests "materials" column does not exist, trigger the fallback query without materials
+        if (error.message && (error.message.includes('materials') || error.code === 'PGRST200')) {
+          console.warn('materials column does not exist, falling back to query without it');
+          return this.fetchCourseCurriculumWithoutMaterials(courseId);
+        }
         throw error;
       }
 
       return (data || []) as unknown as CourseSection[];
     } catch (err: any) {
-      console.warn(`Database relationship to lectures not found or failed for course ID "${courseId}". Falling back to sections only. Details:`, err);
+      // If the primary query failed with something else, or if the relationship itself is broken
+      // Try fetching without materials, and if it still fails, do the default section-only fallback
+      try {
+        return await this.fetchCourseCurriculumWithoutMaterials(courseId);
+      } catch (innerErr) {
+        console.warn(`Database relationship to lectures not found or failed for course ID "${courseId}". Falling back to sections only. Details:`, err);
 
-      // Fallback query: select sections only without joining the missing/restricted lectures relation
-      const { data, error } = await supabase
-        .from('course_sections')
-        .select(`
+        // Fallback query: select sections only without joining the missing/restricted lectures relation
+        const { data, error } = await supabase
+          .from('course_sections')
+          .select(`
+            id,
+            course_id,
+            title,
+            description,
+            position,
+            created_at,
+            updated_at
+          `)
+          .eq('course_id', courseId)
+          .order('position', { ascending: true });
+
+        if (error) {
+          console.error(`Failed to fetch fallback course sections:`, error);
+          throw new Error(error.message || 'Failed to fetch course curriculum.');
+        }
+
+        return (data || []).map((sec: any) => ({
+          ...sec,
+          lectures: []
+        })) as unknown as CourseSection[];
+      }
+    }
+  },
+
+  /**
+   * Helper to fetch curriculum WITHOUT materials column to handle missing database column cases.
+   */
+  async fetchCourseCurriculumWithoutMaterials(courseId: string): Promise<CourseSection[]> {
+    const { data, error } = await supabase
+      .from('course_sections')
+      .select(`
+        id,
+        course_id,
+        title,
+        description,
+        position,
+        created_at,
+        updated_at,
+        lectures (
           id,
           course_id,
+          section_id,
           title,
+          slug,
           description,
+          video_url,
+          video_provider,
+          thumbnail_url,
+          duration_seconds,
           position,
+          is_preview,
+          is_downloadable,
+          status,
+          published_at,
           created_at,
           updated_at
-        `)
-        .eq('course_id', courseId)
-        .order('position', { ascending: true });
+        )
+      `)
+      .eq('course_id', courseId)
+      .order('position', { ascending: true });
 
-      if (error) {
-        console.error(`Failed to fetch fallback course sections:`, error);
-        throw new Error(error.message || 'Failed to fetch course curriculum.');
-      }
-
-      return (data || []).map((sec: any) => ({
-        ...sec,
-        lectures: []
-      })) as unknown as CourseSection[];
-    }
+    if (error) throw error;
+    return (data || []) as unknown as CourseSection[];
   },
 
   /**

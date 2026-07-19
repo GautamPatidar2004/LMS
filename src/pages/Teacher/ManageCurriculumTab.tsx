@@ -67,6 +67,9 @@ export default function ManageCurriculumTab({ setActiveTab, course }: ManageCurr
   const [newLecIsDownloadable, setNewLecIsDownloadable] = useState(false);
   const [newLecStatus, setNewLecStatus] = useState('published');
   const [newLecPublishedAt, setNewLecPublishedAt] = useState('');
+  const [newLecMaterials, setNewLecMaterials] = useState<{ name: string; url: string }[]>([]);
+  const [newMaterialName, setNewMaterialName] = useState('');
+  const [newMaterialUrl, setNewMaterialUrl] = useState('');
 
   // Edit Lecture states
   const [editingLecId, setEditingLecId] = useState<string | null>(null);
@@ -85,6 +88,9 @@ export default function ManageCurriculumTab({ setActiveTab, course }: ManageCurr
   const [editLecIsDownloadable, setEditLecIsDownloadable] = useState(false);
   const [editLecStatus, setEditLecStatus] = useState('published');
   const [editLecPublishedAt, setEditLecPublishedAt] = useState('');
+  const [editLecMaterials, setEditLecMaterials] = useState<{ name: string; url: string }[]>([]);
+  const [editMaterialName, setEditMaterialName] = useState('');
+  const [editMaterialUrl, setEditMaterialUrl] = useState('');
 
   // --- DRAG AND DROP STATE & REFS ---
   const draggedSectionIdxRef = React.useRef<number | null>(null);
@@ -528,9 +534,15 @@ export default function ManageCurriculumTab({ setActiveTab, course }: ManageCurr
         position: nextPosition,
         is_preview: newLecIsPreview,
         is_downloadable: newLecIsDownloadable,
+        materials: newLecMaterials,
         status: newLecStatus || 'published',
         published_at: newLecStatus === 'published' ? (newLecPublishedAt ? new Date(newLecPublishedAt).toISOString() : new Date().toISOString()) : null
       });
+
+      // Reset states
+      setNewLecMaterials([]);
+      setNewMaterialName('');
+      setNewMaterialUrl('');
 
       // Update state locally
       setSections(prev => prev.map(s => {
@@ -583,6 +595,9 @@ export default function ManageCurriculumTab({ setActiveTab, course }: ManageCurr
     setEditLecVideoProvider(lecture.video_provider || 'html5');
     setEditLecThumbnailUrl(lecture.thumbnail_url || '');
     setEditLecIsDownloadable(lecture.is_downloadable || false);
+    setEditLecMaterials(lecture.materials || []);
+    setEditMaterialName('');
+    setEditMaterialUrl('');
     setEditLecStatus(lecture.status || 'published');
     setEditLecPublishedAt(lecture.published_at ? new Date(lecture.published_at).toISOString().slice(0, 16) : '');
   };
@@ -627,6 +642,7 @@ export default function ManageCurriculumTab({ setActiveTab, course }: ManageCurr
         duration_seconds: durationSec,
         is_preview: editLecIsPreview,
         is_downloadable: editLecIsDownloadable,
+        materials: editLecMaterials,
         status: editLecStatus || 'published',
         published_at: editLecStatus === 'published' ? (editLecPublishedAt ? new Date(editLecPublishedAt).toISOString() : new Date().toISOString()) : null
       });
@@ -1253,6 +1269,63 @@ export default function ManageCurriculumTab({ setActiveTab, course }: ManageCurr
                                     />
                                   </div>
                                   
+                                  {/* Edit Lecture Materials Section */}
+                                  <div className="space-y-2 border-t border-slate-100 dark:border-slate-800/40 pt-3">
+                                    <label className="text-[9px] font-extrabold uppercase text-slate-450 block">Lecture Materials & Attachments</label>
+                                    
+                                    {editLecMaterials.length > 0 && (
+                                      <div className="space-y-1.5 max-h-32 overflow-y-auto mb-2">
+                                        {editLecMaterials.map((mat, idx) => (
+                                          <div key={idx} className={`flex items-center justify-between p-2 rounded-lg text-[10px] border ${
+                                            isLight ? 'bg-slate-50 border-slate-150 text-slate-700' : 'bg-slate-900 border-slate-850 text-slate-300'
+                                          }`}>
+                                            <span className="truncate pr-2 font-bold">{mat.name} ({mat.url})</span>
+                                            <button
+                                              type="button"
+                                              onClick={() => setEditLecMaterials(prev => prev.filter((_, i) => i !== idx))}
+                                              className="text-rose-500 hover:text-rose-700 font-extrabold shrink-0"
+                                            >
+                                              Remove
+                                            </button>
+                                          </div>
+                                        ))}
+                                      </div>
+                                    )}
+
+                                    <div className="flex flex-col md:flex-row gap-2">
+                                      <input
+                                        type="text"
+                                        placeholder="Material Name (e.g. Slides PDF)"
+                                        value={editMaterialName}
+                                        onChange={(e) => setEditMaterialName(e.target.value)}
+                                        className={`flex-1 rounded-xl border py-1.5 px-3 text-xs font-semibold outline-none ${
+                                          isLight ? 'bg-white border-slate-200 text-slate-700' : 'bg-slate-900 border-slate-800 text-slate-200'
+                                        }`}
+                                      />
+                                      <input
+                                        type="url"
+                                        placeholder="Material URL (e.g. https://...)"
+                                        value={editMaterialUrl}
+                                        onChange={(e) => setEditMaterialUrl(e.target.value)}
+                                        className={`flex-1 rounded-xl border py-1.5 px-3 text-xs font-semibold outline-none ${
+                                          isLight ? 'bg-white border-slate-200 text-slate-700' : 'bg-slate-900 border-slate-800 text-slate-200'
+                                        }`}
+                                      />
+                                      <button
+                                        type="button"
+                                        onClick={() => {
+                                          if (!editMaterialName.trim() || !editMaterialUrl.trim()) return;
+                                          setEditLecMaterials(prev => [...prev, { name: editMaterialName.trim(), url: editMaterialUrl.trim() }]);
+                                          setEditMaterialName('');
+                                          setEditMaterialUrl('');
+                                        }}
+                                        className="px-3 py-1.5 bg-violet-600 hover:bg-violet-700 text-white rounded-xl text-[10px] font-bold transition-all shrink-0"
+                                      >
+                                        Add
+                                      </button>
+                                    </div>
+                                  </div>
+                                  
                                   <div className="flex gap-2">
                                     <button
                                       onClick={() => handleUpdateLecture(section.id, lecture.id)}
@@ -1557,6 +1630,63 @@ export default function ManageCurriculumTab({ setActiveTab, course }: ManageCurr
                               isLight ? 'bg-white border-slate-200 text-slate-700' : 'bg-slate-900 border-slate-800 text-slate-200'
                             }`}
                           />
+                        </div>
+
+                        {/* Add Lecture Materials Section */}
+                        <div className="space-y-2 border-t border-slate-100 dark:border-slate-800/40 pt-3">
+                          <label className="text-[9px] font-extrabold uppercase text-slate-450 block">Lecture Materials & Attachments</label>
+                          
+                          {newLecMaterials.length > 0 && (
+                            <div className="space-y-1.5 max-h-32 overflow-y-auto mb-2">
+                              {newLecMaterials.map((mat, idx) => (
+                                <div key={idx} className={`flex items-center justify-between p-2 rounded-lg text-[10px] border ${
+                                  isLight ? 'bg-slate-50 border-slate-150 text-slate-700' : 'bg-slate-900 border-slate-850 text-slate-300'
+                                }`}>
+                                  <span className="truncate pr-2 font-bold">{mat.name} ({mat.url})</span>
+                                  <button
+                                    type="button"
+                                    onClick={() => setNewLecMaterials(prev => prev.filter((_, i) => i !== idx))}
+                                    className="text-rose-500 hover:text-rose-700 font-extrabold shrink-0"
+                                  >
+                                    Remove
+                                  </button>
+                                </div>
+                              ))}
+                            </div>
+                          )}
+
+                          <div className="flex flex-col md:flex-row gap-2">
+                            <input
+                              type="text"
+                              placeholder="Material Name (e.g. Slides PDF)"
+                              value={newMaterialName}
+                              onChange={(e) => setNewMaterialName(e.target.value)}
+                              className={`flex-1 rounded-xl border py-1.5 px-3 text-xs font-semibold outline-none ${
+                                isLight ? 'bg-white border-slate-200 text-slate-700' : 'bg-slate-900 border-slate-800 text-slate-200'
+                              }`}
+                            />
+                            <input
+                              type="url"
+                              placeholder="Material URL (e.g. https://...)"
+                              value={newMaterialUrl}
+                              onChange={(e) => setNewMaterialUrl(e.target.value)}
+                              className={`flex-1 rounded-xl border py-1.5 px-3 text-xs font-semibold outline-none ${
+                                isLight ? 'bg-white border-slate-200 text-slate-700' : 'bg-slate-900 border-slate-800 text-slate-200'
+                              }`}
+                            />
+                            <button
+                              type="button"
+                              onClick={() => {
+                                if (!newMaterialName.trim() || !newMaterialUrl.trim()) return;
+                                setNewLecMaterials(prev => [...prev, { name: newMaterialName.trim(), url: newMaterialUrl.trim() }]);
+                                setNewMaterialName('');
+                                setNewMaterialUrl('');
+                              }}
+                              className="px-3 py-1.5 bg-violet-600 hover:bg-violet-700 text-white rounded-xl text-[10px] font-bold transition-all shrink-0"
+                            >
+                              Add
+                            </button>
+                          </div>
                         </div>
 
                         <div className="flex justify-end gap-3 pt-1.5 border-t border-slate-100 dark:border-slate-800/50">

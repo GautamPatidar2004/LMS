@@ -47,6 +47,7 @@ export interface Lecture {
   position: number;
   is_preview: boolean | null;
   is_downloadable: boolean | null;
+  materials?: { name: string; url: string }[] | null;
   status: string | null;
   published_at: string | null;
   created_at: string;

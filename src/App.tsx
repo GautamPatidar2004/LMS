@@ -13,6 +13,7 @@ import StudentDashboard from './pages/Student/Dashboard';
 import StudentCourses from './pages/Student/Courses';
 import StudentBrowseCourse from './pages/Student/BrowseCourse.tsx';
 import StudentCourseDetail from './pages/Student/CourseDetail';
+import StudentLearnCourse from './pages/Student/LearnCourse';
 import StudentCertificates from './pages/Student/Certificates';
 import StudentMessages from './pages/Student/Messages';
 import StudentSettings from './pages/Student/Settings';
@@ -95,6 +96,14 @@ function AppContent() {
             element={
               <ProtectedRoute allowedRoles={['student']}>
                 <StudentCourseDetail />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/student/courses/:slug/learn"
+            element={
+              <ProtectedRoute allowedRoles={['student']}>
+                <StudentLearnCourse />
               </ProtectedRoute>
             }
           />
