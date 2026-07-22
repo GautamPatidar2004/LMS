@@ -26,12 +26,14 @@ export const courseService = {
         total_lectures,
         is_featured,
         created_at,
+        is_published,
+        status,
         instructor:profiles!instructor_id (
           full_name,
           avatar_url
         )
-      `);
-    // Note: We leave .eq('status', 'published') commented out to align with the user's dev environment.
+      `)
+      .eq('is_published', true);
 
     console.log('courseService.fetchPublishedCourses: Fetched raw data from Supabase:', data);
     if (error) {

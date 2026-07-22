@@ -119,7 +119,7 @@ export default function StudentsTab() {
           </div>
         ) : (
           /* Student Table */
-          <div className="overflow-x-auto pt-2">
+          <div className="overflow-x-auto pt-2 min-h-[250px]">
             <table className="w-full text-left text-xs border-collapse">
               <thead>
                 <tr className="border-b border-slate-100 dark:border-slate-850/50 text-[10px] font-extrabold text-slate-400 uppercase">
@@ -136,7 +136,7 @@ export default function StudentsTab() {
                     key={s.id} 
                     className={`transition-colors hover:bg-slate-50/50 dark:hover:bg-slate-900/30 ${
                       isLight ? 'text-slate-700' : 'text-slate-300'
-                    }`}
+                    } ${openDropdownId === s.id ? 'relative z-30' : ''}`}
                   >
                     <td className="py-4 px-4 font-bold text-slate-400">{idx + 1}</td>
                     <td className="py-4 px-4 font-black text-slate-800 dark:text-white">
@@ -167,7 +167,7 @@ export default function StudentsTab() {
                           <>
                             {/* Backdrop click close */}
                             <div className="fixed inset-0 z-10" onClick={() => setOpenDropdownId(null)} />
-                            <div className={`absolute left-0 mt-1 w-64 rounded-2xl border p-2 z-20 shadow-xl ${
+                            <div className={`absolute left-0 mt-1 w-64 rounded-2xl border p-2 z-50 shadow-xl ${
                               isLight ? 'bg-white border-slate-150 text-slate-700' : 'bg-slate-950 border-slate-850 text-slate-200'
                             }`}>
                               <div className="text-[9px] font-black uppercase text-slate-400 px-2.5 py-1.5 border-b border-slate-100 dark:border-slate-850/40 mb-1.5">
@@ -181,7 +181,7 @@ export default function StudentsTab() {
                                       isLight ? 'hover:bg-slate-50' : 'hover:bg-slate-900'
                                     }`}
                                   >
-                                    <div className="h-1.5 w-1.5 rounded-full bg-violet-600 shrink-0 animate-pulse" />
+                                    <div className="h-1.5 w-1.5 rounded-full bg-violet-650 shrink-0 animate-pulse" />
                                     <span className="truncate" title={course}>{course}</span>
                                   </div>
                                 ))}

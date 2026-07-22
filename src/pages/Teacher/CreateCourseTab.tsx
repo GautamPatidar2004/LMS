@@ -104,7 +104,7 @@ export default function CreateCourseTab({ setActiveTab, courseToEdit }: CreateCo
     try {
       const courseData = {
         title,
-        slug,
+        slug: slug || null,
         subtitle: subtitle || null,
         description: description || null,
         thumbnail_url: thumbnailUrl || null,
@@ -113,12 +113,12 @@ export default function CreateCourseTab({ setActiveTab, courseToEdit }: CreateCo
         category,
         level,
         language,
-        price: parseFloat(price) || 0,
-        discount_price: discountPrice ? parseFloat(discountPrice) : null,
+        price: price !== '' ? parseFloat(price) : null,
+        discount_price: discountPrice !== '' ? parseFloat(discountPrice) : null,
         currency,
-        duration_minutes: durationMinutes ? parseInt(durationMinutes) : 0,
-        total_sections: parseInt(totalSections) || 0,
-        total_lectures: parseInt(totalLectures) || 0,
+        duration_minutes: durationMinutes !== '' ? parseInt(durationMinutes) : null,
+        total_sections: totalSections !== '' ? parseInt(totalSections) : null,
+        total_lectures: totalLectures !== '' ? parseInt(totalLectures) : null,
         certificate_enabled: certificateEnabled,
         is_featured: isFeatured,
         is_published: isPublished,
@@ -145,7 +145,7 @@ export default function CreateCourseTab({ setActiveTab, courseToEdit }: CreateCo
   };
 
   return (
-    <div className="space-y-6 max-w-4xl pb-12">
+    <div className="space-y-6 w-full pb-12">
       <div className="flex items-center gap-3">
         <button
           type="button"
@@ -200,10 +200,9 @@ export default function CreateCourseTab({ setActiveTab, courseToEdit }: CreateCo
               </div>
 
               <div className="space-y-1">
-                <label className="text-[10px] font-extrabold uppercase tracking-wider text-slate-400">Slug URL Link</label>
+                <label className="text-[10px] font-extrabold uppercase tracking-wider text-slate-400">Slug URL Link (Optional)</label>
                 <input
                   type="text"
-                  required
                   value={slug}
                   onChange={(e) => setSlug(e.target.value)}
                   placeholder="e.g. reactjs-complete-guide"
@@ -216,10 +215,9 @@ export default function CreateCourseTab({ setActiveTab, courseToEdit }: CreateCo
               </div>
 
               <div className="space-y-1">
-                <label className="text-[10px] font-extrabold uppercase tracking-wider text-slate-400">Subtitle</label>
+                <label className="text-[10px] font-extrabold uppercase tracking-wider text-slate-400">Subtitle (Optional)</label>
                 <input
                   type="text"
-                  required
                   value={subtitle}
                   onChange={(e) => setSubtitle(e.target.value)}
                   placeholder="e.g. Learn React from Beginner to Advanced"
@@ -232,9 +230,8 @@ export default function CreateCourseTab({ setActiveTab, courseToEdit }: CreateCo
               </div>
 
               <div className="space-y-1">
-                <label className="text-[10px] font-extrabold uppercase tracking-wider text-slate-400">Description</label>
+                <label className="text-[10px] font-extrabold uppercase tracking-wider text-slate-400">Description (Optional)</label>
                 <textarea
-                  required
                   rows={5}
                   value={description}
                   onChange={(e) => setDescription(e.target.value)}
@@ -311,10 +308,9 @@ export default function CreateCourseTab({ setActiveTab, courseToEdit }: CreateCo
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 pt-2">
               <div className="space-y-1">
-                <label className="text-[10px] font-extrabold uppercase tracking-wider text-slate-400">Duration (Minutes)</label>
+                <label className="text-[10px] font-extrabold uppercase tracking-wider text-slate-400">Duration (Minutes) (Optional)</label>
                 <input
                   type="number"
-                  required
                   value={durationMinutes}
                   onChange={(e) => setDurationMinutes(e.target.value)}
                   placeholder="e.g. 720"
@@ -325,10 +321,9 @@ export default function CreateCourseTab({ setActiveTab, courseToEdit }: CreateCo
               </div>
 
               <div className="space-y-1">
-                <label className="text-[10px] font-extrabold uppercase tracking-wider text-slate-400">Total Sections</label>
+                <label className="text-[10px] font-extrabold uppercase tracking-wider text-slate-400">Total Sections (Optional)</label>
                 <input
                   type="number"
-                  required
                   value={totalSections}
                   onChange={(e) => setTotalSections(e.target.value)}
                   placeholder="e.g. 8"
@@ -339,10 +334,9 @@ export default function CreateCourseTab({ setActiveTab, courseToEdit }: CreateCo
               </div>
 
               <div className="space-y-1">
-                <label className="text-[10px] font-extrabold uppercase tracking-wider text-slate-400">Total Lectures</label>
+                <label className="text-[10px] font-extrabold uppercase tracking-wider text-slate-400">Total Lectures (Optional)</label>
                 <input
                   type="number"
-                  required
                   value={totalLectures}
                   onChange={(e) => setTotalLectures(e.target.value)}
                   placeholder="e.g. 56"
@@ -365,10 +359,9 @@ export default function CreateCourseTab({ setActiveTab, courseToEdit }: CreateCo
 
             <div className="space-y-3.5">
               <div className="space-y-1">
-                <label className="text-[10px] font-extrabold uppercase tracking-wider text-slate-400">Thumbnail Image URL</label>
+                <label className="text-[10px] font-extrabold uppercase tracking-wider text-slate-400">Thumbnail Image URL (Optional)</label>
                 <input
                   type="url"
-                  required
                   value={thumbnailUrl}
                   onChange={(e) => setThumbnailUrl(e.target.value)}
                   placeholder="https://domain.com/assets/thumbnail.jpg"
@@ -379,10 +372,9 @@ export default function CreateCourseTab({ setActiveTab, courseToEdit }: CreateCo
               </div>
 
               <div className="space-y-1">
-                <label className="text-[10px] font-extrabold uppercase tracking-wider text-slate-400">Banner Image URL</label>
+                <label className="text-[10px] font-extrabold uppercase tracking-wider text-slate-400">Banner Image URL (Optional)</label>
                 <input
                   type="url"
-                  required
                   value={bannerUrl}
                   onChange={(e) => setBannerUrl(e.target.value)}
                   placeholder="https://domain.com/assets/banner.jpg"
@@ -393,10 +385,9 @@ export default function CreateCourseTab({ setActiveTab, courseToEdit }: CreateCo
               </div>
 
               <div className="space-y-1">
-                <label className="text-[10px] font-extrabold uppercase tracking-wider text-slate-400">Intro Video URL</label>
+                <label className="text-[10px] font-extrabold uppercase tracking-wider text-slate-400">Intro Video URL (Optional)</label>
                 <input
                   type="url"
-                  required
                   value={introVideoUrl}
                   onChange={(e) => setIntroVideoUrl(e.target.value)}
                   placeholder="https://domain.com/assets/intro.mp4"
@@ -439,10 +430,9 @@ export default function CreateCourseTab({ setActiveTab, courseToEdit }: CreateCo
               </div>
 
               <div className="space-y-1">
-                <label className="text-[10px] font-extrabold uppercase tracking-wider text-slate-400">Base Price</label>
+                <label className="text-[10px] font-extrabold uppercase tracking-wider text-slate-400">Base Price (Optional)</label>
                 <input
                   type="number"
-                  required
                   value={price}
                   onChange={(e) => setPrice(e.target.value)}
                   placeholder="e.g. 999"
@@ -581,10 +571,9 @@ export default function CreateCourseTab({ setActiveTab, courseToEdit }: CreateCo
 
             <div className="space-y-3.5">
               <div className="space-y-1">
-                <label className="text-[10px] font-extrabold uppercase tracking-wider text-slate-400">SEO Title</label>
+                <label className="text-[10px] font-extrabold uppercase tracking-wider text-slate-400">SEO Title (Optional)</label>
                 <input
                   type="text"
-                  required
                   value={seoTitle}
                   onChange={(e) => setSeoTitle(e.target.value)}
                   placeholder="e.g. Learn React.js Complete Guide"
@@ -595,10 +584,9 @@ export default function CreateCourseTab({ setActiveTab, courseToEdit }: CreateCo
               </div>
 
               <div className="space-y-1">
-                <label className="text-[10px] font-extrabold uppercase tracking-wider text-slate-400">SEO Description</label>
+                <label className="text-[10px] font-extrabold uppercase tracking-wider text-slate-400">SEO Description (Optional)</label>
                 <textarea
                   rows={3}
-                  required
                   value={seoDescription}
                   onChange={(e) => setSeoDescription(e.target.value)}
                   placeholder="SEO description for search engines..."

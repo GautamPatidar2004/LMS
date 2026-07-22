@@ -12,7 +12,8 @@ import {
   User,
   Settings,
   X,
-  GraduationCap
+  GraduationCap,
+  Presentation
 } from 'lucide-react';
 
 interface StudentSidebarProps {
@@ -52,6 +53,11 @@ export default function StudentSidebar({ isOpen, onClose }: StudentSidebarProps)
       name: 'Wishlist',
       path: '/student/wishlist',
       icon: Heart,
+    },
+    {
+      name: 'Webinars & Workshops',
+      path: '/student/webinars',
+      icon: Presentation,
     },
     {
       name: 'Messages',
