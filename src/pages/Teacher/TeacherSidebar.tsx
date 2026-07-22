@@ -18,6 +18,7 @@ import {
   User,
   Settings,
   HelpCircle,
+  FileText,
   X
 } from 'lucide-react';
 
@@ -61,6 +62,7 @@ export default function TeacherSidebar({ activeTab, setActiveTab, isOpen, onClos
         { id: 'profile', name: 'Profile', icon: User },
         { id: 'settings', name: 'Settings', icon: Settings },
         { id: 'help', name: 'Help & Support', icon: HelpCircle },
+        { id: 'terms', name: 'Terms & Conditions', icon: FileText },
       ]
     }
   ];

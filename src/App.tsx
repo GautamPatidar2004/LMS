@@ -19,6 +19,7 @@ import StudentMessages from './pages/Student/Messages';
 import StudentSettings from './pages/Student/Settings';
 import StudentWishlist from './pages/Student/Wishlist';
 import StudentProfile from './pages/Student/Profile';
+import StudentTerms from './pages/Student/Terms';
 import TeacherDashboard from './pages/Teacher/Dashboard';
 import AdminDashboard from './pages/Admin/Dashboard';
 
@@ -152,6 +153,14 @@ function AppContent() {
             element={
               <ProtectedRoute allowedRoles={['student']}>
                 <StudentSettings />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/student/terms"
+            element={
+              <ProtectedRoute allowedRoles={['student']}>
+                <StudentTerms />
               </ProtectedRoute>
             }
           />

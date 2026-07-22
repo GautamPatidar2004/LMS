@@ -10,6 +10,7 @@ import ReviewsTab from './ReviewsTab';
 import CertificatesTab from './CertificatesTab';
 import ReportsTab from './ReportsTab';
 import ManageCurriculumTab from './ManageCurriculumTab';
+import TermsAndConditions from '../TermsAndConditions';
 import { useTheme } from '../../contexts/ThemeContext';
 import { Course } from '../../types/course';
 
@@ -93,6 +94,8 @@ export default function TeacherDashboard() {
             <p className="text-xs text-slate-400 font-semibold">Contact support admins, read documentation, and browse teaching tips.</p>
           </div>
         );
+      case 'terms':
+        return <TermsAndConditions role="teacher" />;
       default:
         return <DashboardTab setActiveTab={handleSetActiveTab} />;
     }

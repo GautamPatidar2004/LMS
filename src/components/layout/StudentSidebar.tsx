@@ -13,7 +13,8 @@ import {
   Settings,
   X,
   GraduationCap,
-  Presentation
+  Presentation,
+  FileText
 } from 'lucide-react';
 
 interface StudentSidebarProps {
@@ -73,6 +74,11 @@ export default function StudentSidebar({ isOpen, onClose }: StudentSidebarProps)
       name: 'Settings',
       path: '/student/settings',
       icon: Settings,
+    },
+    {
+      name: 'Terms & Conditions',
+      path: '/student/terms',
+      icon: FileText,
     }
   ];
 
